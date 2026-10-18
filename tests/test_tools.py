@@ -119,3 +119,42 @@ def test_bash_failing_command(tmp_path):
     result = registry.run("bash", {"command": "exit 1"})
     assert result["ok"] is False
     assert result["exit_code"] == 1
+
+
+def test_sensitive_files_cannot_be_read_or_listed(tmp_path):
+    registry = build_default_registry(tmp_path)
+    (tmp_path / ".env").write_text("TOKEN=secret", encoding="utf-8")
+    listing = registry.run("list_files", {"path": "."})
+    assert ".env" not in listing["files"]
+    try:
+        registry.run("read_file", {"path": ".env"})
+    except PermissionError as exc:
+        assert "credential" in str(exc)
+    else:
+        raise AssertionError("Expected sensitive-file read to be blocked")
+
+    git_config = tmp_path / ".git" / "config"
+    git_config.parent.mkdir()
+    git_config.write_text("remote secret", encoding="utf-8")
+    try:
+        registry.run("read_file", {"path": ".git/config"})
+    except PermissionError as exc:
+        assert "internal" in str(exc)
+    else:
+        raise AssertionError("Expected internal-file read to be blocked")
+
+
+def test_checkpoint_restores_edited_file(tmp_path):
+    registry = build_default_registry(tmp_path)
+    target = tmp_path / "value.txt"
+    target.write_text("before", encoding="utf-8")
+    registry.begin_checkpoint("edit value")
+    registry.run(
+        "edit_file",
+        {"path": "value.txt", "old_string": "before", "new_string": "after"},
+    )
+    checkpoint = registry.finish_checkpoint()
+    assert checkpoint
+    assert target.read_text(encoding="utf-8") == "after"
+    assert registry.undo_last()["ok"] is True
+    assert target.read_text(encoding="utf-8") == "before"

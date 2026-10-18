@@ -1,2 +1,2 @@
 # Runtime uses only the Python standard library.
-# Install test tools with: pip install -e .[dev]
+# Development tools: python -m pip install -e ".[dev]"

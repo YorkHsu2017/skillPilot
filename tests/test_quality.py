@@ -4,10 +4,8 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 
-from skillPilot.models import SkillRecord, utc_now
+from skillPilot.models import SkillRecord
 from skillPilot.skills import (
-    SkillStore,
-    SkillValidator,
     _CONSECUTIVE_FAILURE_THRESHOLD,
     _IDLE_DAYS_THRESHOLD,
     _MIN_USAGE_FOR_IDLE_CHECK,
@@ -15,6 +13,8 @@ from skillPilot.skills import (
     _MIN_USAGE_FOR_SUCCESS_RATE_CHECK,
     _QUALITY_SCORE_DEPRECATION_THRESHOLD,
     _SUCCESS_RATE_DEPRECATION_THRESHOLD,
+    SkillStore,
+    SkillValidator,
 )
 
 

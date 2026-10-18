@@ -33,7 +33,7 @@ class SkillRecord:
     embedding: list[float] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SkillRecord":
+    def from_dict(cls, data: dict[str, Any]) -> SkillRecord:
         return cls(
             id=str(data["id"]),
             name=str(data.get("name", data["id"])),
@@ -89,3 +89,6 @@ class AgentResult:
     summary: str | None = None
     total_input_tokens: int = 0
     total_output_tokens: int = 0
+    changed_files: list[str] = field(default_factory=list)
+    checkpoint_id: str | None = None
+    error: str | None = None

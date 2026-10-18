@@ -12,7 +12,6 @@ from typing import Any, Callable, List
 
 from .models import SkillRecord, utc_now
 
-
 EmbedFn = Callable[[List[str]], List[List[float]]]
 LLMChatFn = Callable[..., str]  # (messages, temperature, max_tokens) -> str
 
@@ -406,7 +405,7 @@ class SkillStore:
         source_task: str = "",
     ) -> SkillRecord:
         base_id = _slugify(name)
-        suffix = hashlib.sha1(f"{name}:{source_task}:{body}".encode("utf-8")).hexdigest()[:8]
+        suffix = hashlib.sha1(f"{name}:{source_task}:{body}".encode()).hexdigest()[:8]
         skill_id = f"{base_id}_{suffix}"
         skill = SkillRecord(
             id=skill_id,
@@ -602,13 +601,15 @@ class SkillStore:
                 )
 
         # Condition 3: low quality score with sufficient usage
-        if skill.usage_count >= _MIN_USAGE_FOR_QUALITY_CHECK:
-            if skill.quality_score < _QUALITY_SCORE_DEPRECATION_THRESHOLD:
-                return (
-                    f"Quality score {skill.quality_score:.2f} below threshold "
-                    f"{_QUALITY_SCORE_DEPRECATION_THRESHOLD} "
-                    f"after {skill.usage_count} uses"
-                )
+        if (
+            skill.usage_count >= _MIN_USAGE_FOR_QUALITY_CHECK
+            and skill.quality_score < _QUALITY_SCORE_DEPRECATION_THRESHOLD
+        ):
+            return (
+                f"Quality score {skill.quality_score:.2f} below threshold "
+                f"{_QUALITY_SCORE_DEPRECATION_THRESHOLD} "
+                f"after {skill.usage_count} uses"
+            )
 
         # Condition 4: idle for too long with very few uses
         if skill.usage_count < _MIN_USAGE_FOR_IDLE_CHECK:
